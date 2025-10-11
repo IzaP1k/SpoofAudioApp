@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ name }} - My Awesome App</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; }
+        header, footer { background: #4CAF50; color: white; text-align: center; padding: 10px 0; }
+        nav a { margin: 0 10px; color: white; text-decoration: none; }
+        main { max-width: 800px; margin: 20px auto; padding: 10px; background: white; }
+        
+        /* Dodatkowe style, aby Twoje elementy wyglądały lepiej z tym CSS */
+        header ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        header li {
+            margin: 0 10px;
+        }
+        footer p {
+            margin: 0;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>{{ name }}</h1>
+        <nav aria-label="Main navigation">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/pokedex/api/">Pokedex</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="pokedex-section" aria-labelledby="pokedex-heading">
+            <h2 id="pokedex-heading">Pokedex</h2>
+            <p>An encyclopedia of Pokémon species.</p>
+            <!-- More Pokedex content would go here -->
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 Flutter Mapp</p>
+    </footer>
+
+</body>
+</html>
