@@ -1,4 +1,4 @@
-## To-Do / Planned Features
+## To-Do
 
 - [ ] Dodać animację czekania (loading animation) 
 - [ ] Podpiąć model AI  
