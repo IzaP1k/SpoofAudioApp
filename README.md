@@ -1,6 +1,6 @@
 ## To-Do
 
-- [ ] Dodać animację czekania (loading animation) 
+- [X] Dodać animację czekania (loading animation) 
 - [ ] Podpiąć model AI  
 - [ ] Dokończyć ekran działania modelu 
 - [ ] Dodać podsumowanie wyników 
