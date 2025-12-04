@@ -19,7 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Background(
       appBar: CustomAppBar(
-        title: 'Strona główna',
+        title: 'Detektor oszustw audio',
         backgroundColor: kPrimaryLightColor,
         detailsColor: kPrimaryColor,
         actions: [

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/constants.dart';
 import 'package:flutter_frontend/responsive.dart';
-import '../../components/background.dart';
+import 'package:flutter_frontend/components/background.dart';
 import 'components/login_form.dart';
 import 'components/login_screen_top_image.dart';
 import 'auth/auth_service.dart';
-import '../Mainpage/main_page.dart';
+import 'package:flutter_frontend/Screens/Mainpage/main_page.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,6 +19,27 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   final authService = AuthService();
+  bool _isCheckingToken = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingToken();
+  }
+
+  Future<void> _checkExistingToken() async {
+    final token = await authService.getToken();
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainScreen()),
+      );
+    } else {
+      setState(() {
+        _isCheckingToken = false;
+      });
+    }
+  }
 
   Future<void> handleLogin() async {
     final token = await authService.login(
@@ -26,22 +47,35 @@ class _LoginScreenState extends State<LoginScreen> {
       passwordController.text,
     );
     if (token != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Zalogowano!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Zalogowano!"),
+          backgroundColor: kConfirmationColor,
+        ),
+      );
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Błąd logowania")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Nieprawidłowa nazwa użytkownika lub hasło."),
+          backgroundColor: kRejectionColor,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingToken) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(child: CircularProgressIndicator(color: kPrimaryColor)),
+      );
+    }
+
     return Background(
       appBar: null,
       child: SingleChildScrollView(

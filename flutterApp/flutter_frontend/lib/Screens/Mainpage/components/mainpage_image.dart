@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../constants.dart';
+import 'package:flutter_frontend/constants.dart';
 
 class MainpageImage extends StatelessWidget {
   const MainpageImage({super.key});
@@ -14,7 +14,7 @@ class MainpageImage extends StatelessWidget {
             const Spacer(),
             Expanded(
               flex: 8,
-              child: SvgPicture.asset("assets/icons/mainpage.svg", width: 400),
+              child: SvgPicture.asset("assets/icons/mainpage.svg", width: 290),
             ),
             const Spacer(),
           ],

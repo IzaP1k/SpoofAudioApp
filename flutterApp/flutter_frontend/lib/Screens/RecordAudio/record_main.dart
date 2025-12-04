@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_frontend/Screens/Mainpage/components/appbar.dart';
+import 'package:flutter_frontend/Screens/Mainpage/main_page.dart';
 import 'package:flutter_frontend/Screens/RecordAudio/components/record_image.dart';
 import 'package:flutter_frontend/Screens/RecordAudio/components/audiofunction.dart';
-import '../AudioAnalyse/audioanalyse.dart';
+import 'package:flutter_frontend/Screens/Settings/settings_screen.dart';
+import 'package:flutter_frontend/Screens/AudioAnalyse/audioanalyse.dart';
 import 'package:flutter_frontend/components/background.dart';
 import 'package:flutter_frontend/responsive.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,6 +13,8 @@ import 'package:record/record.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_frontend/constants.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnlineRecorder extends StatefulWidget {
   const OnlineRecorder({super.key});
@@ -27,9 +32,12 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
     if (isRecording) {
       String? filepath = await audioRecorder.stop();
       if (filepath != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Nagranie zapisane: $filepath")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Nagranie zapisane!"),
+            backgroundColor: kConfirmationColor,
+          ),
+        );
         setState(() {
           isRecording = false;
           recordingPath = filepath;
@@ -46,7 +54,10 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Brak uprawnień do nagrywania")),
+          const SnackBar(
+            content: Text("Brak uprawnień do nagrywania"),
+            backgroundColor: kRejectionColor,
+          ),
         );
       }
     }
@@ -55,45 +66,109 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
   Future<void> uploadFile() async {
     if (recordingPath == null) return;
 
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse("http://127.0.0.1:8000/upload/file/"),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: LoadingAnimationWidget.staggeredDotsWave(
+            color: kPrimaryColor,
+            size: 90,
+          ),
+        );
+      },
     );
 
-    request.files.add(
-      await http.MultipartFile.fromPath("file", recordingPath!),
-    );
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/upload/file/"),
+      );
 
-    var response = await request.send();
+      final prefs = await SharedPreferences.getInstance();
+      final String selectedModel =
+          prefs.getString('selected_model') ?? 'model_1';
+      request.fields['model_name'] = selectedModel;
+      print("Wysyłanie pliku z modelem: $selectedModel");
 
-    if (response.statusCode == 200) {
-      var respStr = await response.stream.bytesToString();
-      var jsonResponse = jsonDecode(respStr);
-      print("JSON poprawny: $jsonResponse");
+      request.files.add(
+        await http.MultipartFile.fromPath("file", recordingPath!),
+      );
 
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AudioAnalyzer(
-              resultJson: jsonResponse,
-              audioPath: recordingPath!,
+      var response = await request.send();
+
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (response.statusCode == 200) {
+        var respStr = await response.stream.bytesToString();
+        var jsonResponse = jsonDecode(respStr);
+        print("JSON poprawny: $jsonResponse");
+
+        if (context.mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AudioAnalyzer(
+                resultJson: jsonResponse,
+                audioPath: recordingPath!,
+              ),
             ),
+          );
+        }
+      } else {
+        print("Błąd: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Błąd: ${response.statusCode}"),
+            backgroundColor: kRejectionColor,
           ),
         );
       }
-    } else {
-      print("Błąd: ${response.statusCode}");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Błąd: ${response.statusCode}")));
+    } catch (e) {
+      // ZAMYKANIE ANIMACJI w przypadku błędu
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Błąd przesyłania: $e"),
+          backgroundColor: kRejectionColor,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Background(
-      appBar: null,
+      appBar: CustomAppBar(
+        title: 'Detektor oszustw audio',
+        backgroundColor: kPrimaryLightColor,
+        detailsColor: kPrimaryColor,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: kPrimaryColor),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MainScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       child: SingleChildScrollView(
         child: Responsive(
           mobile: _buildMobileLayout(context),
@@ -114,7 +189,7 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: defaultPadding),
             child: Text(
-              "Nagraj swój głos",
+              "Nagraj dźwięk",
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: kPrimaryColor,
@@ -161,8 +236,8 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
                       child: ElevatedButton(
                         onPressed: uploadFile,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: kConfirmationColor,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
                         ),
                         child: const Text(
                           "Zatwierdź",
@@ -246,7 +321,7 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
                           child: ElevatedButton(
                             onPressed: uploadFile,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: kConfirmationColor,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: const Text(

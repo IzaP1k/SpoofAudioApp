@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../constants.dart';
-import '../../Login/login_screen.dart';
-import '../../Signup/signup_screen.dart';
+import 'package:flutter_frontend/constants.dart';
+import 'package:flutter_frontend/Screens/Login/login_screen.dart';
+import 'package:flutter_frontend/Screens/Signup/signup_screen.dart';
 
 class LoginAndSignupBtn extends StatelessWidget {
   const LoginAndSignupBtn({super.key});
@@ -24,9 +24,9 @@ class LoginAndSignupBtn extends StatelessWidget {
                 ),
               );
             },
-            child: Text(
-              "Login".toUpperCase(),
-              style: const TextStyle(color: Colors.white),
+            child: const Text(
+              "Zaloguj się",
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ),
@@ -46,9 +46,9 @@ class LoginAndSignupBtn extends StatelessWidget {
             backgroundColor: kPrimaryLightColor,
             elevation: 0,
           ),
-          child: Text(
-            "Sign Up".toUpperCase(),
-            style: const TextStyle(color: Colors.black),
+          child: const Text(
+            "Zarejestruj się",
+            style: TextStyle(color: Colors.black),
           ),
         ),
       ],
