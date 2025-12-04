@@ -1,9 +1,10 @@
+from django import forms
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
-from .serializers import RegisterSerializer, UserSerializer
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from .serializers import RegisterSerializer, UserSerializer, ChangePasswordSerializer
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
@@ -45,3 +46,33 @@ class UserRecordView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = request.user
+
+            if not user.check_password(serializer.validated_data['old_password']):
+                return Response(
+                    {"old_password": ["Podano nieprawidłowe pierwotne hasło."]},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # ustaw nowe hasło
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+
+            # odśwież token
+            Token.objects.filter(user=user).delete()
+            token = Token.objects.create(user=user)
+
+            return Response(
+                {"status": "Hasło zostało zmienione.", "token": token.key},
+                status=status.HTTP_200_OK
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

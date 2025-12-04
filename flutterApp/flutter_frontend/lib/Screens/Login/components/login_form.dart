@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../components/already_have_an_account_acheck.dart';
-import '../../../constants.dart';
-import '../../Signup/signup_screen.dart';
+import 'package:flutter_frontend/constants.dart';
+import 'package:flutter_frontend/components/already_have_an_account_acheck.dart';
+import 'package:flutter_frontend/constants.dart';
+import 'package:flutter_frontend/Screens/Signup/signup_screen.dart';
 
 class LoginForm extends StatelessWidget {
   const LoginForm({
@@ -54,9 +55,9 @@ class LoginForm extends StatelessWidget {
             tag: "login_btn",
             child: ElevatedButton(
               onPressed: onLogin,
-              child: Text(
-                "Login".toUpperCase(),
-                style: const TextStyle(color: Colors.white),
+              child: const Text(
+                "Zaloguj się",
+                style: TextStyle(color: Colors.white),
               ),
             ),
           ),

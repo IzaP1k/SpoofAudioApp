@@ -29,16 +29,6 @@ class Background extends StatelessWidget {
               left: 0,
               child: Image.asset(topImage, width: 120),
             ),
-            // Positioned(
-            //   bottom: 0,
-            //   right: 0,
-            //   child: SvgPicture.asset(
-            //     bottomImage,
-            //     width: 150,
-            //     height: 150,
-            //     color: const Color.fromARGB(255, 118, 118, 121),
-            //   ),
-            // ),
             SafeArea(child: child),
           ],
         ),

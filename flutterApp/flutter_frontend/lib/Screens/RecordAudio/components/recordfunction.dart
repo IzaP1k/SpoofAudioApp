@@ -24,9 +24,12 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
     if (isRecording) {
       String? filepath = await audioRecorder.stop();
       if (filepath != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Nagranie zapisane: $filepath")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Nagranie zapisane!"),
+            backgroundColor: kConfirmationColor,
+          ),
+        );
         setState(() {
           isRecording = false;
           recordingPath = filepath;
@@ -43,7 +46,10 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Brak uprawnień do nagrywania")),
+          const SnackBar(
+            content: Text("Brak uprawnień do nagrywania"),
+            backgroundColor: kRejectionColor,
+          ),
         );
       }
     }

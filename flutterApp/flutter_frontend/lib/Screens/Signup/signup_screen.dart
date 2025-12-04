@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/constants.dart';
 import 'package:flutter_frontend/responsive.dart';
-import '../../components/background.dart';
-import 'components/sign_up_top_image.dart';
-import 'components/signup_form.dart';
-import 'auth/auth_service.dart';
-import '../Login/login_screen.dart';
+import 'package:flutter_frontend/components/background.dart';
+import 'package:flutter_frontend/Screens/Signup/components/sign_up_top_image.dart';
+import 'package:flutter_frontend/Screens/Signup/components/signup_form.dart';
+import 'package:flutter_frontend/Screens/Signup/auth/auth_service.dart';
+import 'package:flutter_frontend/Screens/Login/login_screen.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -23,18 +24,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> onRegister() async {
     final authService = AuthService();
+    bool mounted = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: LoadingAnimationWidget.staggeredDotsWave(
+            color: const Color(0xFF0C6E2A),
+            size: 70,
+          ),
+        );
+      },
+    );
+
     try {
       final token = await authService.register(
-        usernameController.text,
-        emailController.text,
+        usernameController.text.trim(),
+        emailController.text.trim(),
         passwordController.text,
         confirmPasswordController.text,
       );
 
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+
       if (token != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Zarejestrowano!")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Zarejestrowano!"),
+            backgroundColor: kConfirmationColor,
+          ),
+        );
 
         Navigator.pushReplacement(
           context,
@@ -42,21 +63,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } catch (e) {
-      String errorMessage = "Błąd rejestrowania";
-      if (e is Map<String, dynamic>) {
-        final passwordErrors = e['password']?.join("\n") ?? "";
-        final password2Errors = e['password2']?.join("\n") ?? "";
-        errorMessage = [
-          passwordErrors,
-          password2Errors,
-        ].where((msg) => msg.isNotEmpty).join("\n");
-      } else {
-        errorMessage = e.toString();
+      if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+
+      String errorMessage = "Wystąpił błąd podczas rejestracji.";
+
+      if (e is Map) {
+        List<String> msgs = [];
+
+        e.forEach((key, value) {
+          if (value is List) {
+            msgs.addAll(value.map((v) => v.toString()));
+          } else if (value is String) {
+            msgs.add(value);
+          }
+        });
+
+        if (msgs.isNotEmpty) {
+          errorMessage = msgs.join("\n");
+        }
+      } else if (e is String) {
+        errorMessage = e;
+      } else if (e is Exception) {
+        final msg = e.toString().replaceFirst("Exception: ", "");
+        if (msg.isNotEmpty) errorMessage = msg;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage), backgroundColor: kRejectionColor),
+      );
     }
   }
 

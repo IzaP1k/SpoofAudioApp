@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../components/already_have_an_account_acheck.dart';
-import '../../../constants.dart';
-import '../../Login/login_screen.dart';
+import 'package:flutter_frontend/components/already_have_an_account_acheck.dart';
+import 'package:flutter_frontend/constants.dart';
+import 'package:flutter_frontend/Screens/Login/login_screen.dart';
 
 class SignUpForm extends StatelessWidget {
   const SignUpForm({
@@ -86,9 +86,9 @@ class SignUpForm extends StatelessWidget {
           const SizedBox(height: defaultPadding),
           ElevatedButton(
             onPressed: onRegister,
-            child: Text(
-              "Zarejstruj się".toUpperCase(),
-              style: const TextStyle(color: Colors.white),
+            child: const Text(
+              "Zarejstruj się",
+              style: TextStyle(color: Colors.white),
             ),
           ),
           const SizedBox(height: defaultPadding),

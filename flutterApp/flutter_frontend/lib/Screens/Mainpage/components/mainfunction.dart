@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_frontend/Screens/HistoryAnalyse/history_screen.dart';
+import 'package:flutter_frontend/Screens/Mainpage/components/chooseModel.dart';
 import 'package:http/http.dart' as http;
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'dart:convert';
 import 'dart:io';
-import '../../../constants.dart';
-import '../../AudioAnalyse/audioanalyse.dart';
-import '../../Recordaudio/record_main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_frontend/constants.dart';
+import 'package:flutter_frontend/Screens/AudioAnalyse/audioanalyse.dart';
+import 'package:flutter_frontend/Screens/RecordAudio/record_main.dart';
 
 class MainFunction extends StatefulWidget {
   const MainFunction({super.key});
@@ -16,13 +20,51 @@ class MainFunction extends StatefulWidget {
 
 class _MainFunctionState extends State<MainFunction> {
   File? pickedFile;
+  int selectedIndex = 0;
+
+  final List<Map<String, String>> models = const [
+    {
+      "name": "Model 1",
+      "info":
+          "Model skupiony na dokładności. Najwyższa skuteczność. Brak faworyzacji klas.",
+    },
+    {
+      "name": "Model 2",
+      "info":
+          "Model o wysokiej skuteczności, ale niższej niż model 1. Skupiony na czułości na wszelkie manipulacje głosowe. Faworyzuje wykrywanie manipulacji.",
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedModel();
+  }
+
+  Future<void> _loadSelectedModel() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedModel = prefs.getString('selected_model');
+    if (savedModel != null) {
+      final index = models.indexWhere((m) => m['name'] == savedModel);
+      if (index != -1 && index != selectedIndex) {
+        setState(() {
+          selectedIndex = index;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveSelectedModel(String modelName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selected_model', modelName);
+  }
 
   Future<void> pickFile() async {
     if (pickedFile != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Możesz dodać tylko 1 plik!"),
-          backgroundColor: Colors.red,
+          backgroundColor: kRejectionColor,
         ),
       );
       return;
@@ -31,7 +73,7 @@ class _MainFunctionState extends State<MainFunction> {
     final result = await FilePicker.platform.pickFiles(
       allowMultiple: false,
       type: FileType.custom,
-      allowedExtensions: ['flac', 'wav', 'mp3', 'ogg'],
+      allowedExtensions: ['flac', 'wav', 'mp3', 'ogg', 'm4a'],
     );
 
     if (result != null && result.files.single.path != null) {
@@ -44,36 +86,127 @@ class _MainFunctionState extends State<MainFunction> {
   Future<void> uploadFile() async {
     if (pickedFile == null) return;
 
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse("http://127.0.0.1:8000/upload/file/"),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: LoadingAnimationWidget.staggeredDotsWave(
+          color: kPrimaryColor,
+          size: 90,
+        ),
+      ),
     );
 
-    request.files.add(
-      await http.MultipartFile.fromPath("file", pickedFile!.path),
-    );
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/upload/file/"),
+      );
 
-    var response = await request.send();
+      final prefs = await SharedPreferences.getInstance();
+      final String selectedModel =
+          prefs.getString('selected_model') ?? 'model_1';
+      request.fields['model_name'] = selectedModel;
 
-    if (response.statusCode == 200) {
-      var respStr = await response.stream.bytesToString();
-      var jsonResponse = jsonDecode(respStr);
-      print("JSON poprawny: $jsonResponse");
+      request.files.add(
+        await http.MultipartFile.fromPath("file", pickedFile!.path),
+      );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => AudioAnalyzer(
-            resultJson: jsonResponse,
-            audioPath: pickedFile!.path,
+      var response = await request.send();
+      if (Navigator.canPop(context)) Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        var respStr = await response.stream.bytesToString();
+        var jsonResponse = jsonDecode(respStr);
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AudioAnalyzer(
+              resultJson: jsonResponse,
+              audioPath: pickedFile!.path,
+            ),
           ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Błąd: ${response.statusCode}"),
+            backgroundColor: kRejectionColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (Navigator.canPop(context)) Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Błąd przesyłania: $e"),
+          backgroundColor: kRejectionColor,
         ),
       );
-    } else {
-      print("Błąd: ${response.statusCode}");
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Błąd: ${response.statusCode}")));
+    }
+  }
+
+  Future<void> _fetchAnalyses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("auth_token");
+
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Brak tokena autoryzacyjnego"),
+          backgroundColor: kRejectionColor,
+        ),
+      );
+      return;
+    }
+
+    final uri = Uri.parse("$baseUrl/analysis/get/");
+
+    try {
+      final response = await http.post(
+        uri,
+        headers: {
+          "Authorization": "Token $token",
+          "Content-Type": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data["status"] == "ok") {
+          final List analyses = data["records"] ?? [];
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => HistoryScreen(analysesData: analyses),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Błąd: ${data['error'] ?? 'Nieznany'}"),
+              backgroundColor: kRejectionColor,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Błąd: ${response.statusCode}"),
+            backgroundColor: kRejectionColor,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Błąd połączenia: $e"),
+          backgroundColor: kRejectionColor,
+        ),
+      );
     }
   }
 
@@ -90,12 +223,13 @@ class _MainFunctionState extends State<MainFunction> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Wybierz plik
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: pickFile,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 8),
               ),
               child: const Text(
                 "Wybierz plik",
@@ -103,31 +237,93 @@ class _MainFunctionState extends State<MainFunction> {
               ),
             ),
           ),
-          const SizedBox(height: defaultPadding),
 
+          const SizedBox(height: defaultPadding),
+          // Analiza nagrania
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const OnlineRecorder(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const OnlineRecorder()),
                 );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: kPrimaryLightColor,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 8),
               ),
               child: const Text(
-                "Analiza na żywo",
+                "Nagraj dźwięk",
                 style: TextStyle(fontSize: 16, color: Colors.black),
               ),
             ),
           ),
-          const SizedBox(height: defaultPadding * 2),
 
+          const SizedBox(height: defaultPadding * 3),
+          // Historia analiz
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Sprawdź historię analiz",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: kPrimaryColor,
+                fontSize: 24,
+              ),
+            ),
+          ),
+          const SizedBox(height: defaultPadding),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _fetchAnalyses,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryLightColor,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              child: const Text(
+                "Zobacz analizy",
+                style: TextStyle(fontSize: 16, color: Colors.black),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: defaultPadding * 3),
+          // Dobór modelu
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "Dobór modelu",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: kPrimaryColor,
+                fontSize: 18,
+              ),
+            ),
+          ),
+          const SizedBox(height: defaultPadding),
+          Center(
+            child: ModelSelector(
+              models: models,
+              initialSelectedIndex: selectedIndex,
+              onSelected: (model, index) {
+                setState(() {
+                  selectedIndex = index;
+                });
+                _saveSelectedModel(model);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Wybrano $model"),
+                    backgroundColor: kConfirmationColor,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: defaultPadding * 2),
+          // Podgląd wybranego pliku
           if (pickedFile != null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -183,14 +379,13 @@ class _MainFunctionState extends State<MainFunction> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: uploadFile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kConfirmationColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     child: const Text(
                       "Zatwierdź",

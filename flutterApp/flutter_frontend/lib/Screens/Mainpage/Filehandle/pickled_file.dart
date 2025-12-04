@@ -1,17 +1,21 @@
 import 'dart:io';
-
+import 'package:flutter_frontend/constants.dart';
 import 'package:http/http.dart' as http;
 
-Future<void> uploadFile(File file) async {
-  var uri = Uri.parse("http://127.0.0.1:8000/api/upload/");
+Future<void> uploadFile(File file, String modelName) async {
+  var uri = Uri.parse("$baseUrl/api/upload/");
   var request = http.MultipartRequest('POST', uri);
 
+  // Dodanie pliku
   request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+  // Dodanie wybranego modelu
+  request.fields['model'] = modelName;
 
   var response = await request.send();
 
   if (response.statusCode == 200) {
-    print("Plik wysłany poprawnie!");
+    print("Plik wysłany poprawnie z modelem: $modelName");
   } else {
     print("Błąd: ${response.statusCode}");
   }
