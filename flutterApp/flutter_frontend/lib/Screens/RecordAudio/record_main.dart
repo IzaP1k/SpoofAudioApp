@@ -127,7 +127,7 @@ class _OnlineRecorderState extends State<OnlineRecorder> {
         );
       }
     } catch (e) {
-      // ZAMYKANIE ANIMACJI w przypadku błędu
+      
       if (Navigator.canPop(context)) {
         Navigator.pop(context);
       }

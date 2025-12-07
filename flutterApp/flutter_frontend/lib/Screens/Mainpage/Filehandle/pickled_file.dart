@@ -6,10 +6,10 @@ Future<void> uploadFile(File file, String modelName) async {
   var uri = Uri.parse("$baseUrl/api/upload/");
   var request = http.MultipartRequest('POST', uri);
 
-  // Dodanie pliku
+
   request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
-  // Dodanie wybranego modelu
+
   request.fields['model'] = modelName;
 
   var response = await request.send();

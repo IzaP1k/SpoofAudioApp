@@ -223,7 +223,7 @@ class _MainFunctionState extends State<MainFunction> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Wybierz plik
+          
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -239,7 +239,7 @@ class _MainFunctionState extends State<MainFunction> {
           ),
 
           const SizedBox(height: defaultPadding),
-          // Analiza nagrania
+          
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
@@ -261,7 +261,7 @@ class _MainFunctionState extends State<MainFunction> {
           ),
 
           const SizedBox(height: defaultPadding * 3),
-          // Historia analiz
+          
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -290,7 +290,7 @@ class _MainFunctionState extends State<MainFunction> {
           ),
 
           const SizedBox(height: defaultPadding * 3),
-          // Dobór modelu
+          
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
@@ -323,7 +323,7 @@ class _MainFunctionState extends State<MainFunction> {
           ),
 
           const SizedBox(height: defaultPadding * 2),
-          // Podgląd wybranego pliku
+          
           if (pickedFile != null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

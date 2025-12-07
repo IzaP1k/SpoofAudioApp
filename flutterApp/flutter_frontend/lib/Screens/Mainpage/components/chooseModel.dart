@@ -80,7 +80,7 @@ class _ModelSelectorState extends State<ModelSelector> {
           ],
         ),
 
-        // Tooltipy w nadrzędnym Stacku
+
         _buildTooltipOverlay(0, hoverLeft),
         _buildTooltipOverlay(1, hoverRight),
       ],
