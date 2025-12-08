@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_frontend/constants.dart';
-import 'package:flutter_frontend/xai_analyse/xaiScreen.dart';
 import 'package:on_popup_window_widget/on_popup_window_widget.dart';
 import 'package:on_process_button_widget/on_process_button_widget.dart';
 import 'dart:convert';
