@@ -1,6 +1,6 @@
 # SpoofAudioApp — Instrukcja uruchomienia (Django + Flutter)
 
-Poniżej znajdziesz skróconą, praktyczną instrukcję jak przygotować środowisko (Python/Django i Flutter), gdzie umieścić modele i plik standaryzujący dane, jak uruchomić aplikację w trybie desktopowym oraz na emulatorze, a także opcję uruchomienia przez Docker.
+Poniżej znajdziesz skróconą, praktyczną instrukcję jak przygotować środowisko (Python/Django i Flutter), gdzie umieścić modele i plik standaryzujący dane, jak uruchomić aplikację w trybie desktopowym oraz na emulatorze.
 
 ## Wymagania wstępne
 - **System:** Windows
@@ -20,14 +20,11 @@ Poniżej znajdziesz skróconą, praktyczną instrukcję jak przygotować środow
 	- `audio_classifier/` — analiza, XAI, ładowanie i architektura modeli
 	- `django_project/` — konfiguracja projektu Django (`settings.py`, `urls.py` itd.)
 	- `manage_database/` — modele i migracje bazy danych
-	- `requirements.txt` / `requirements.docker.txt` — zależności Pythona
+	- `requirements.txt`  — zależności Pythona
 	- `Pipfile` (jeśli używasz pipenv)
 - `flutterApp/flutter_frontend/` — frontend Flutter
 	- `lib/` — kod aplikacji (widoki, logika, stałe)
 	- `pubspec.yaml` — zależności Flutter
-	- `docker/` — opcjonalne pliki do uruchomienia frontendu w kontenerze
-- `docker-compose.yml` — uruchomienie usług w Dockerze
-- `DOCKER_SETUP.md` — dodatkowe uwagi dot. Dockera
 
 ## Umieszczenie modeli i pliku standaryzującego (Django)
 - Katalog na najlepsze modele: 
@@ -92,7 +89,7 @@ flutter run -d emulator-5554
 - **`manage_database/`**: modele bazy danych, migracje, widoki API.
 - **`django_project/settings.py`**: konfiguracja projektu, aplikacji, baz danych.
 
-## Wymagania (dependencies)
+## Zależności
 - **Python (Django):** w `djangoApp/requirements.txt`.
 - **Flutter:** w `flutterApp/flutter_frontend/pubspec.yaml`.
 
@@ -112,6 +109,4 @@ cd "i:\Program Files\PracaInzApka\djangoApp"; python -m venv .venv; ".venv\Scrip
 # Flutter (Windows desktop)
 cd "i:\Program Files\PracaInzApka\flutterApp\flutter_frontend"; flutter pub get; flutter config --enable-windows-desktop; flutter run -d windows
 
-# Docker
-cd "i:\Program Files\PracaInzApka"; docker compose up --build
 ```
