@@ -14,6 +14,10 @@ from audio_classifier.models.models_architecture import AntiSpoofingResNet
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models/Res_Net")
 SCALER_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models/Res_Net/mel-spect_scaler.pkl")
 
+PRELOADED_SCALER = None
+PRELOADED_MODELS = {}
+_PRELOAD_DONE = False
+
 
 def prepare_description(file_path, sr=None, feature_func=None):
 
@@ -73,6 +77,22 @@ def load_model_and_scaler(model_name, model_folder, scaler_file, model_class, de
     return scaler, model
 
 
+def init_preloaded_models(model_folder=MODEL_DIR, scaler_file=SCALER_DIR, model_class=AntiSpoofingResNet):
+    global PRELOADED_SCALER, PRELOADED_MODELS, _PRELOAD_DONE
+    if _PRELOAD_DONE:
+        return
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    PRELOADED_SCALER = load_resources(model_folder, scaler_file)
+    for key in ("model_1", "model_2"):
+        filename = select_model_name(key)
+        full_path = os.path.join(model_folder, filename)
+        try:
+            PRELOADED_MODELS[key] = load_model_weights(model_class, full_path, device=device)
+        except Exception:
+            PRELOADED_MODELS[key] = None
+    _PRELOAD_DONE = True
+
+
 def load_and_resample_audio(file_path, target_sr):
     y, sr, description = load_audio_description(file_path=file_path)
     if sr != target_sr:
@@ -125,19 +145,22 @@ def evaluate_model(model, processed_tensors):
 
 
 def classify(confidences):
-    avg_prob_class_1 = float(np.mean(confidences[:, 1]))
-    avg_prob_class_0 = float(np.mean(confidences[:, 0]))
-    final_pred = 1 if avg_prob_class_1 > avg_prob_class_0 else 0
-    scores = confidences[:, 1].tolist() if final_pred == 1 else confidences[:, 0].tolist()
-    status = "autentyczne" if final_pred == 0 else "zmanipulowane"
-    avg_prob = avg_prob_class_1 if final_pred == 1 else avg_prob_class_0
+
+    probs_class_1 = confidences[:, 1]
+    avg_prob_class_1 = float(np.mean(probs_class_1))
+    final_pred = 1 if avg_prob_class_1 >= 0.5 else 0
+    scores = probs_class_1.tolist()
+    status = "zmanipulowane" if final_pred == 1 else "autentyczne"
+    avg_prob = avg_prob_class_1
+
     if avg_prob < 0.65:
         confidence = "mała"
     elif avg_prob < 0.75:
         confidence = "średnia"
     else:
         confidence = "duża"
-    result = f"Nagranie jest {status} - pewność: {confidence}"
+    result = f"Nagranie jest {status} – pewność: {confidence}"
+
     return final_pred, avg_prob, result, scores
 
 
@@ -145,8 +168,12 @@ def get_result_ResNet(file_path, model_name, model_folder=MODEL_DIR, scaler_file
                       model_class=AntiSpoofingResNet, target_sr=1600, target_width=63):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model_name = select_model_name(model_name)
-    scaler, model = load_model_and_scaler(model_name, model_folder, scaler_file, model_class, device)
+    init_preloaded_models(model_folder=model_folder, scaler_file=scaler_file, model_class=model_class)
+    scaler = PRELOADED_SCALER
+    model = PRELOADED_MODELS.get(model_name)
+    if scaler is None or model is None:
+        model_file = select_model_name(model_name)
+        scaler, model = load_model_and_scaler(model_file, model_folder, scaler_file, model_class, device)
 
     if scaler is None:
         return None
