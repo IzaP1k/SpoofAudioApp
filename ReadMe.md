@@ -81,44 +81,20 @@ flutter run -d windows
 flutter devices
 flutter run -d emulator-5554
 ```
-	(Zastąp `emulator-5554` właściwym ID urządzenia.)
+	(Miejsce na ID urządzenia)
 
-## Integracja Django + Flutter
-- Flutter komunikuje się z backendem Django poprzez API (REST). Upewnij się, że `BASE_URL`/`API_URL` w plikach Flutter (np. w `lib/constants.dart`) wskazuje na uruchomiony backend, np. `http://127.0.0.1:8000/` lub adres Dockera.
-- Jeśli używasz emulatora Androida, pamiętaj o hostach specjalnych:
-	- `10.0.2.2` to host `localhost` z perspektywy emulatora Android.
 
-## Uruchomienie w Docker (opcjonalnie)
-- Wymagany: Docker Desktop dla Windows.
-- Z poziomu głównego katalogu repozytorium:
-```powershell
-cd "i:\Program Files\PracaInzApka"
-docker compose up --build
-```
-- Uruchomienie w tle:
-```powershell
-docker compose up --build -d
-```
-- Bez przebudowy kontenerów:
-```powershell
-docker compose up
-```
-- Wyłączenie:
-```powershell
-docker compose down
-```
 
 ## Krótko o funkcjach i strukturze (Django)
 - **`audio_classifier/analyse_func.py`**: funkcje analizy audio i przygotowania cech.
 - **`audio_classifier/xai_func.py`**: metody XAI do objaśniania predykcji modeli.
-- **`audio_classifier/models`**: architektury (`models_architecture.py`), ładowanie/zarządzanie modelami (`load_model.py`), ekstrakcja cech (`extract_feature_func.py`), katalog `best_models` na wybrane modele i plik standaryzujący.
+- **`audio_classifier/models`**: architektury (`models_architecture.py`), ładowanie/zarządzanie modelami (`load_model.py`), ekstrakcja cech (`extract_feature_func.py`).
 - **`manage_database/`**: modele bazy danych, migracje, widoki API.
-- **`django_project/settings.py`**: konfiguracja projektu, aplikacji, baz danych, static/media.
+- **`django_project/settings.py`**: konfiguracja projektu, aplikacji, baz danych.
 
 ## Wymagania (dependencies)
 - **Python (Django):** w `djangoApp/requirements.txt`.
 - **Flutter:** w `flutterApp/flutter_frontend/pubspec.yaml`.
-- Dodatkowe wymagania Dockera: `requirements.docker.txt` oraz `docker-compose.yml` (usługi backend/front).
 
 ## Najczęstsze problemy i wskazówki
 - **PATH:** Upewnij się, że `python`, `pip`, `flutter` są dostępne w `PATH`.
@@ -126,7 +102,6 @@ docker compose down
 ```powershell
 Set-ExecutionPolicy RemoteSigned
 ```
-- **Modele i standaryzacja:** brak plików w `best_models` lub zła nazwa spowoduje błędy ładowania. Sprawdź logikę w `load_model.py`.
 - **Emulator sieć:** z Androida używaj `http://10.0.2.2:8000/` zamiast `localhost`.
 
 ## Skrót: szybkie komendy
