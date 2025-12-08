@@ -148,10 +148,10 @@ def classify(confidences):
 
     probs_class_1 = confidences[:, 1]
     avg_prob_class_1 = float(np.mean(probs_class_1))
-    final_pred = 1 if avg_prob_class_1 >= 0.5 else 0
+    final_pred = 1 if avg_prob_class_1 >= 0.65 else 0
     scores = probs_class_1.tolist()
     status = "zmanipulowane" if final_pred == 1 else "autentyczne"
-    avg_prob = avg_prob_class_1
+    avg_prob = avg_prob_class_1 if final_pred == 1 else 1 - avg_prob_class_1
 
     if avg_prob < 0.65:
         confidence = "mała"
