@@ -30,8 +30,8 @@ Poniżej znajdziesz skróconą, praktyczną instrukcję jak przygotować środow
 - `DOCKER_SETUP.md` — dodatkowe uwagi dot. Dockera
 
 ## Umieszczenie modeli i pliku standaryzującego (Django)
-- Katalog na najlepsze modele: `djangoApp/audio_classifier/models/best_models/`
-	- Umieść wybrane, przeszkolone modele z konkretnymi nazwami wymaganymi przez kod (np. nazwy odpowiadające architekturze i wersji). Jeśli masz wytyczne co do nazw plików (np. `model_bilstm_v1.pt`, `scaler.pkl`), trzymaj się ich konsekwentnie.
+- Katalog na najlepsze modele: 
+	- Aktualnie najlepsze modele zostały umeiszczone w `djangoApp/audio_classifier/ResNet`.
 	- Plik **standaryzujący dane** (np. scaler, normalizer) umieść w tym samym katalogu i załaduj w kodzie zgodnie z funkcjami w `audio_classifier/models` (np. `load_model.py`, `extract_feature_func.py`).
 	- Jeśli nazwy muszą być dokładnie określone przez aplikację, sprawdź odwołania w `djangoApp/audio_classifier/models/load_model.py` i `models_architecture.py`.
 
